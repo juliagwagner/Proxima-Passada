@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Próxima Passada — Cadastro de necessidade</title>
+<style>
+  :root{
+    --ink:#1c2b2b;
+    --ink-soft:#4a5c5c;
+    --paper:#f4f1ea;
+    --card:#ffffff;
+    --line:#d8d2c4;
+    --accent:#e2622f;
+    --accent-deep:#b8441a;
+    --accent-soft:#fbeee7;
+    --track:#1d9e75;
+    --track-soft:#e1f5ee;
+    --radius:12px;
+    --shadow:0 1px 3px rgba(28,43,43,.06),0 8px 24px rgba(28,43,43,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);color:var(--ink);line-height:1.6;padding:0 0 4rem;
+  }
+  .wrap{max-width:600px;margin:0 auto;padding:0 20px}
+
+  header{padding:2.4rem 0 1.4rem;text-align:center}
+  .mark{display:inline-flex;align-items:baseline;gap:2px;font-weight:800;font-size:1.9rem;letter-spacing:-.02em}
+  .mark .a{color:var(--accent)} .mark .b{color:var(--ink)}
+  .stride{display:block;width:64px;height:3px;margin:.6rem auto 0;background:linear-gradient(90deg,transparent,var(--accent),transparent);border-radius:2px}
+  header p{margin-top:.9rem;color:var(--ink-soft);font-size:1rem}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.6rem;margin-top:1.2rem}
+  .section-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:1rem}
+
+  .field{margin-bottom:1.1rem}
+  .field:last-child{margin-bottom:0}
+  label{display:block;font-weight:600;font-size:.94rem;margin-bottom:.4rem}
+  .hint{font-size:.83rem;color:var(--ink-soft);margin-bottom:.4rem}
+  .lock{font-size:.77rem;color:var(--track);font-weight:600;margin-left:.3rem}
+
+  input[type=text],select,textarea{
+    width:100%;font:inherit;font-size:1rem;color:var(--ink);
+    background:#fdfcf9;border:1px solid var(--line);border-radius:8px;
+    padding:.65rem .75rem;transition:border-color .15s,box-shadow .15s;
+    -webkit-appearance:none;appearance:none;
+  }
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5c5c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .8rem center;padding-right:2rem}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(226,98,47,.14)}
+  textarea{resize:vertical;min-height:60px}
+
+  /* Sub-localidade: aparece depois de selecionar ONG */
+  .sub-local{display:none;margin-top:.7rem}
+  .sub-local.visible{display:block}
+
+  .chips{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.2rem}
+  .chip{position:relative;cursor:pointer;user-select:none;font-size:.9rem;padding:.4rem .8rem;border-radius:99px;background:#fdfcf9;border:1px solid var(--line);transition:all .13s}
+  .chip input{position:absolute;opacity:0;inset:0;cursor:pointer;width:100%;height:100%}
+  .chip:hover{border-color:var(--accent)}
+  .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-deep);font-weight:600}
+
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:.5rem;
+    width:100%;font:inherit;font-weight:700;font-size:1rem;cursor:pointer;
+    background:var(--accent);color:#fff;border:none;border-radius:10px;
+    padding:.85rem 1rem;margin-top:.6rem;transition:background .15s,transform .05s;
+  }
+  .btn:hover{background:var(--accent-deep)}
+  .btn:active{transform:scale(.99)}
+  .btn:disabled{background:#c0b8ae;cursor:not-allowed;transform:none}
+
+  .feedback{display:none;margin-top:1.2rem;border-radius:var(--radius);padding:1.2rem 1.4rem;text-align:center}
+  .feedback.ok{display:block;background:var(--track-soft);border:1px solid #a8dfc9;color:#0f6e56}
+  .feedback.err{display:block;background:var(--accent-soft);border:1px solid #f0b8a0;color:var(--accent-deep)}
+  .feedback strong{display:block;font-size:1.05rem;margin-bottom:.3rem}
+  .feedback p{font-size:.9rem}
+  .btn-novo{margin-top:.9rem;font:inherit;font-weight:600;font-size:.9rem;cursor:pointer;background:transparent;color:var(--accent-deep);border:1px solid var(--line);border-radius:8px;padding:.6rem 1.2rem;transition:all .13s}
+  .btn-novo:hover{border-color:var(--accent);background:var(--accent-soft)}
+
+  .err-inline{color:var(--accent-deep);font-size:.85rem;margin-top:.4rem;display:none}
+  .err-inline.show{display:block}
+
+  footer{text-align:center;margin-top:2rem;font-size:.8rem;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="mark"><span class="a">Próxima</span><span class="b">Passada</span></span>
+    <span class="stride"></span>
+    <p>Cadastro de necessidade de tênis</p>
+  </header>
+
+  <form id="form" autocomplete="off">
+
+    <!-- BLOCO 1: ONG e local -->
+    <div class="card">
+      <p class="section-title">Projeto e localidade</p>
+
+      <div class="field">
+        <label for="ong">ONG / projeto</label>
+        <select id="ong" required>
+          <option value="">Selecione o projeto</option>
+          <option value="Achilles International Brazil">Achilles International Brazil</option>
+          <option value="Projeto Impulso">Projeto Impulso</option>
+        </select>
+      </div>
+
+      <!-- Sub-localidades do Projeto Impulso -->
+      <div class="field sub-local" id="sub-impulso">
+        <label for="local-impulso">Local de treino</label>
+        <select id="local-impulso">
+          <option value="">Selecione a localidade</option>
+          <!-- Edite aqui os locais do Projeto Impulso -->
+          <option>Parque do Ibirapuera</option>
+          <option>Parque Estadual da Cantareira</option>
+          <option>Parque Villa-Lobos</option>
+          <option>Outro (especificar abaixo)</option>
+        </select>
+      </div>
+
+      <!-- Sub-localidades do Achilles -->
+      <div class="field sub-local" id="sub-achilles">
+        <label for="local-achilles">Local de treino</label>
+        <select id="local-achilles">
+          <option value="">Selecione a localidade</option>
+          <!-- Edite aqui os locais do Achilles -->
+          <option>Parque do Ibirapuera</option>
+          <option>Outro (especificar abaixo)</option>
+        </select>
+      </div>
+
+<div class="field">
+        <label for="local-outro">Especificar local (se necessário)</label>
+        <input type="text" id="local-outro" placeholder="Ex.: Parque do Carmo — pista de atletismo">
+      </div>
+    </div>
+
+    <!-- BLOCO 2: Dados do atleta -->
+    <div class="card">
+      <p class="section-title">Dados do atleta</p>
+
+      <div class="field">
+        <label for="atleta">Nome completo do atleta <span class="lock">🔒 uso interno</span></label>
+        <p class="hint">Apenas o primeiro nome aparece no marketing. O nome completo fica só na planilha interna.</p>
+        <input type="text" id="atleta" placeholder="Ex.: Ana Beatriz Souza" required>
+      </div>
+
+      <div class="field">
+        <label>Tamanho do tênis (BR)</label>
+        <div class="chips" id="sizes"></div>
+        <p class="err-inline" id="err-size">Selecione um tamanho.</p>
+      </div>
+
+      <div class="field">
+        <label>Tipo de tênis</label>
+        <div class="chips" id="genero-chips">
+          <label class="chip"><input type="radio" name="genero" value="Masculino"> Masculino</label>
+          <label class="chip"><input type="radio" name="genero" value="Feminino"> Feminino</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="perfil">Perfil</label>
+        <select id="perfil">
+          <option value="">Selecione</option>
+          <option>Infantil</option>
+          <option>Juvenil</option>
+          <option>Adulto</option>
+        </select>
+      </div>
+
+<div class="field">
+        <label for="obs">Observação <span style="font-weight:400;color:var(--ink-soft)">(opcional)</span></label>
+        <textarea id="obs" placeholder="Ex.: prefere cores neutras; usa órtese; tem pisada pronada."></textarea>
+      </div>
+    </div>
+
+    <!-- BLOCO 3: Treinador -->
+    <div class="card">
+      <p class="section-title">Identificação do treinador</p>
+      <div class="field">
+        <label for="treinador">Seu nome</label>
+        <input type="text" id="treinador" placeholder="Nome do treinador ou educador">
+      </div>
+    </div>
+
+    <button type="submit" class="btn" id="btn-submit">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+      Enviar para a base de dados
+    </button>
+    <p class="err-inline" id="err-form" style="text-align:center;margin-top:.6rem">Preencha os campos obrigatórios antes de enviar.</p>
+
+  </form>
+
+  <!-- Feedback pós-envio -->
+  <div class="feedback" id="feedback-ok">
+    <strong>✅ Cadastrado com sucesso!</strong>
+    <p>A necessidade de <span id="fb-nome"></span> foi registrada na base de dados.</p>
+    <button class="btn-novo" id="btn-novo">+ Cadastrar outro atleta</button>
+  </div>
+  <div class="feedback" id="feedback-err">
+    <strong>⚠️ Não foi possível enviar.</strong>
+    <p>Verifique sua conexão e tente novamente. Se o problema persistir, entre em contato com a coordenação.</p>
+  </div>
+
+  <footer>Próxima Passada · cada tênis parado pode virar a próxima passada de alguém.</footer>
+</div>
+
+<script>
+// ── Cole aqui a URL do seu Apps Script após implantar ──
+var SHEET_URL = "https://script.google.com/macros/s/AKfycbwNadCkstUlLBgIhig22Iq9nXVich4cZPX0rmiUMEOnlTD2uZfjwkTYi1KvhjrjKFJBWQ/exec";
+// ─────────────────────────────────────────────────────
+
+// Chips de tamanho
+var sizeWrap = document.getElementById("sizes");
+for (var s = 28; s <= 44; s++) {
+  var l = document.createElement("label");
+  l.className = "chip";
+  l.innerHTML = '<input type="radio" name="size" value="' + s + '">' + s;
+  sizeWrap.appendChild(l);
+}
+sizeWrap.addEventListener("change", function () {
+  [].forEach.call(sizeWrap.querySelectorAll(".chip"), function (c) {
+    c.classList.toggle("on", c.querySelector("input").checked);
+  });
+});
+
+// Sub-localidades: mostra bloco conforme ONG selecionada
+document.getElementById("ong").addEventListener("change", function () {
+  var v = this.value;
+  document.getElementById("sub-impulso").classList.toggle("visible", v === "Projeto Impulso");
+  document.getElementById("sub-achilles").classList.toggle("visible", v === "Achilles International Brazil");
+});
+
+// Chips de gênero
+document.getElementById("genero-chips").addEventListener("change", function () {
+  [].forEach.call(this.querySelectorAll(".chip"), function (c) {
+    c.classList.toggle("on", c.querySelector("input").checked);
+  });
+});
+
+function val(id) { return (document.getElementById(id).value || "").trim(); }
+function firstName(full) { return full.split(/\s+/)[0] || ""; }
+function pickSize() { var r = document.querySelector("input[name=size]:checked"); return r ? r.value : ""; }
+function pickGenero() { var r = document.querySelector("input[name=genero]:checked"); return r ? r.value : ""; }
+
+function buildLocal() {
+  var ong = val("ong");
+  var sub = "";
+  if (ong === "Projeto Impulso") sub = val("local-impulso");
+  else if (ong === "Achilles International Brazil") sub = val("local-achilles");
+  else if (ong === "Corridas em escolas públicas") sub = val("local-escolas");
+  var outro = val("local-outro");
+  if (sub && sub !== "Outro (especificar abaixo)") return sub + (outro ? " — " + outro : "");
+  return outro || sub;
+}
+
+function gerarMarketing(d) {
+  var first = firstName(d.nomeCompleto);
+  var perfil = d.perfil ? d.perfil.toLowerCase() : "";
+  var local = d.local || d.ong;
+
+  var ig = "🏃 Doe uma próxima passada!\n\n";
+  ig += first + " treina em " + local + " e precisa de um par de tênis";
+  if (d.genero) ig += " " + d.genero.toLowerCase();
+  if (perfil) ig += " " + perfil;
+  ig += " tamanho " + d.tamanho + " (BR).";
+  if (d.observacao) ig += "\n\nDetalhe: " + d.observacao;
+  ig += "\n\nTem um par parado no armário? Ele pode virar a próxima passada de alguém. 💚\n\n";
+  ig += "#ProximaPassada #DoeTenis #CorridaQueTransforma";
+  if (d.ong) ig += " #" + d.ong.replace(/[^A-Za-zÀ-ÿ0-9]/g, "");
+
+  var wa = "*Próxima Passada — necessidade de tênis* 🏃\n\n";
+  wa += "• Quem vai usar: " + first + "\n";
+  wa += "• Tamanho: " + d.tamanho + " (BR)" + (d.genero ? " · " + d.genero : "") + (perfil ? " · " + perfil : "") + "\n";
+  wa += "• Treina em: " + local + "\n";
+  if (d.observacao) wa += "• Observação: " + d.observacao + "\n";
+  wa += "\nTem um par em bom estado para doar? Responde essa mensagem que a gente combina a coleta. 💚";
+
+  return { ig: ig, wa: wa };
+}
+
+document.getElementById("form").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  var ong = val("ong");
+  var atleta = val("atleta");
+  var tamanho = pickSize();
+  var errForm = document.getElementById("err-form");
+  var errSize = document.getElementById("err-size");
+
+  errForm.classList.remove("show");
+  errSize.classList.remove("show");
+
+  if (!ong || !atleta || !tamanho) {
+    if (!tamanho) errSize.classList.add("show");
+    if (!ong || !atleta) errForm.classList.add("show");
+    return;
+  }
+
+  var local = buildLocal();
+  var data = {
+    ong:          ong,
+    local:        local,
+    nomeCompleto: atleta,
+    primeiroNome: firstName(atleta),
+    tamanho:      tamanho,
+    genero:       pickGenero(),
+    perfil:       val("perfil"),
+    observacao:   val("obs"),
+    treinador:    val("treinador")
+  };
+
+  var mkt = gerarMarketing(data);
+  data.postInstagram = mkt.ig;
+  data.msgWhatsapp   = mkt.wa;
+
+  var btn = document.getElementById("btn-submit");
+  btn.disabled = true;
+  btn.textContent = "Enviando…";
+
+  fetch(SHEET_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(data)
+  })
+  .then(function () {
+    document.getElementById("fb-nome").textContent = firstName(atleta);
+    document.getElementById("form").style.display = "none";
+    document.getElementById("feedback-ok").classList.add("ok");
+    document.getElementById("feedback-ok").style.display = "block";
+  })
+  .catch(function () {
+    document.getElementById("feedback-err").style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Enviar para a base de dados";
+  });
+});
+
+document.getElementById("btn-novo").addEventListener("click", function () {
+  document.getElementById("form").reset();
+  document.getElementById("form").style.display = "block";
+  document.getElementById("feedback-ok").style.display = "none";
+  document.getElementById("feedback-ok").classList.remove("ok");
+  [].forEach.call(document.querySelectorAll(".chip"), function (c) { c.classList.remove("on"); });
+  [].forEach.call(document.querySelectorAll(".sub-local"), function (el) { el.classList.remove("visible"); });
+  var btn = document.getElementById("btn-submit");
+  btn.disabled = false;
+  btn.textContent = "Enviar para a base de dados";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+</script>
+</body>
+</html>
